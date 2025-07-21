@@ -1,0 +1,38 @@
+# @package _global_
+
+# Default configuration for the GPT-2 model and training
+
+# Model configuration
+model:
+  _target_: src.models.gpt2.GPT2
+  vocab_size: 50257
+  n_layer: 12
+  n_head: 12
+  n_embd: 768
+
+# Training configuration
+train:
+  batch_size: 32
+  learning_rate: 1e-4
+  epochs: 10
+  device: "auto" # auto, cpu, cuda, mps
+  resume: false
+  checkpoint_dir: "checkpoints"
+  log_interval: 10
+
+# Data configuration
+data:
+  _target_: src.data.data_loader.DataLoader
+  data_dir: "data/shakesphere"
+  sequence_length: 256
+
+# Tokenizer configuration
+tokenizer:
+  _target_: tiktoken.get_encoding
+  encoding_name: "gpt2"
+
+# Logging configuration
+logging:
+  _target_: wandb.init
+  project: "gpt2-clone"
+  name: "${now:%Y-%m-%d_%H-%M-%S}"

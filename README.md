@@ -1,66 +1,122 @@
-# GPT-2 Minimal Language Model (Shakespeare Edition)
+# Production-Grade GPT-2 Clone
 
-This project is a minimal implementation of a GPT-2 style language model, written in PyTorch, designed to train on Shakespearean text. It demonstrates the core mechanics of transformer-based language modeling, including a custom lightweight data loader and a simple training loop. The model and code are intended for educational purposes and experimentation with transformer architectures.
+This project is a refactored, production-grade implementation of a GPT-2 style language model in PyTorch. It is designed to be modular, configurable, testable, and ready for inference.
 
-## Device & Hardware Requirements
+## Overview
 
-- **Tested on:** MacBook Pro (M4 Pro, 24GB VRAM)
-- **OS:** macOS (Darwin 24.5.0) 
+This codebase is a result of transforming an experimental GPT-2 implementation into a robust and maintainable project. The key features include:
+
+*   **Modular Structure:** Code is organized into logical components for data handling, modeling, training, evaluation, and inference.
+*   **Configuration-driven:** All parameters are managed through `hydra` and YAML configuration files.
+*   **Testable:** Unit tests are included for core components using `pytest`.
+*   **Logging and Monitoring:** Integrated with `wandb` for experiment tracking.
+*   **Checkpointing:** Save and resume training from checkpoints.
+*   **Inference Ready:** A dedicated script for generating text from a trained model.
+
+## Project Structure
+
+```
+├── src/
+│   ├── config/              # Configs for training/inference
+│   ├── models/              # GPT2 model code
+│   ├── data/                # Data loading/preprocessing
+│   ├── train/               # Training logic
+│   ├── eval/                # Evaluation scripts
+│   ├── inference/           # Inference/prompting interface
+│   └── utils/               # Logging, checkpointing, etc.
+├── scripts/                 # CLI wrappers (train.py, eval.py, infer.py)
+├── tests/                   # Pytest-compatible unit tests
+├── configs/                 # YAML config files
+├── notebooks/               # Jupyter experiments (optional)
+├── README.md
+├── pyproject.toml
+└── .env / .env.example
+```
 
 ## Getting Started
 
 ### 1. Prerequisites
 
-- Python 3.10+
-- [UV](https://github.com/astral-sh/uv) package manager (ensure it is installed and available in your PATH)
+*   Python 3.10+
+*   [UV](https://github.com/astral-sh/uv) package manager
 
 ### 2. Installation
 
-All dependencies are managed via `pyproject.toml`. To install them using UB:
+Clone the repository and install the dependencies using `uv`:
 
 ```sh
-ub pip install -r pyproject.toml
+git clone <repository-url>
+cd <repository-name>
+uv pip install -e .[dev]
 ```
 
-Or, if UB supports direct TOML installation:
+The `.[dev]` extra installs the development dependencies, including `black`, `ruff`, and `mypy`.
+
+### 3. Configuration
+
+All aspects of the project are controlled by YAML configuration files in the `configs/` directory. The main configuration file is `configs/default.yaml`. You can override any parameter from the command line.
+
+For example, to change the batch size for training:
 
 ```sh
-uv sync
+python scripts/train.py train.batch_size=64
 ```
 
-### 3. Prepare the Data
+### 4. Training
 
-The project includes a sample Shakespeare text in `data/shakesphere/input.txt`. You can preprocess or replace this file as needed. (See `data/shakesphere/prepare.py` for any data preparation scripts.)
-
-### 4. Train the Model
-
-To start training, simply run:
+To start training the model, run the `scripts/train.py` script:
 
 ```sh
-ub python main.py
+python scripts/train.py
 ```
 
 This will:
 
-- Load and tokenize the Shakespeare text
-- Initialize a GPT-2 style model
-- Train the model on your Apple Silicon GPU (using Metal acceleration)
+*   Load the data and tokenizer.
+*   Initialize the GPT-2 model.
+*   Start the training loop, logging to `wandb`.
+*   Save checkpoints to the `checkpoints/` directory.
 
-### 5. File Structure
+To resume training from a checkpoint, set `train.resume=true` in the configuration or on the command line:
 
-- `main.py` — Main training script
-- `gpt2.py` — GPT-2 model implementation
-- `gpt_config.py` — Model configuration dataclass
-- `data_loader.py` — Lightweight data loader for batching and tokenization
-- `data/shakesphere/input.txt` — Sample training data (Shakespeare)
-- `data/shakesphere/prepare.py` — (Optional) Data preparation script
-- `pyproject.toml` — Project dependencies and metadata
+```sh
+python scripts/train.py train.resume=true
+```
 
-## Notes
+### 5. Inference
 
-- The model is configured for demonstration and may require tuning for larger datasets or different tasks.
-- Training time and memory usage will depend on your hardware. The provided MacBook Pro (M4 Pro, 24GB VRAM) is well-suited for this workload.
+To generate text from a trained model, use the `scripts/infer.py` script. You need to provide a path to a checkpoint and a prompt.
+
+```sh
+python scripts/infer.py inference.checkpoint_path=checkpoints/latest.pt inference.prompt="To be, or not to be"
+```
+
+### 6. Evaluation
+
+To evaluate the model's perplexity on the test set, use the `scripts/eval.py` script.
+
+```sh
+python scripts/eval.py eval.checkpoint_path=checkpoints/latest.pt
+```
+
+### 7. Testing
+
+To run the unit tests, use `pytest`:
+
+```sh
+pytest
+```
+
+### 8. Code Quality
+
+This project uses `black` for code formatting, `ruff` for linting, and `mypy` for type checking. To run the checks:
+
+```sh
+black .
+ruff check .
+mypy .
+```
 
 ## Tribute
 
-This project is inspired by [Andrej Karpathy's YouTube video on building GPT from scratch](https://www.youtube.com/watch?v=l8pRSuU81PU). His clear explanations and hands-on approach to deep learning and language models have been invaluable in shaping this implementation. If you want to understand the inner workings of GPT models, we highly recommend watching his video!
+This project is inspired by [Andrej Karpathy's YouTube video on building GPT from scratch](https://www.youtube.com/watch?v=l8pRSuU81PU). His clear explanations and hands-on approach to deep learning and language models have been invaluable in shaping this implementation.
